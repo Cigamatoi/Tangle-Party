@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no">
+  <title>IOTA Party</title>
+  <meta name="description" content="IOTA Party – das Partyspiel für die IOTA Community. 2–6 Spieler, direkt im Browser.">
+  <meta property="og:title" content="IOTA Party">
+  <meta property="og:description" content="Komm in meinen Raum – direkt im Browser spielen, ohne Download.">
+  <style>
+    html, body { margin: 0; height: 100%; background: #050816; overflow: hidden; color: #e8ecff;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+    #unity-canvas { width: 100%; height: 100%; display: block; background: #050816; outline: none; }
+    #loader { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 20px; background: radial-gradient(circle at 50% 38%, #1b2466 0%, #0a0f33 38%, #050816 75%); transition: opacity .5s; }
+    #logo { font-size: clamp(40px, 8vw, 84px); font-weight: 800; letter-spacing: 3px; color: #4fe0ff;
+      text-shadow: 0 0 34px rgba(79, 224, 255, .55); }
+    #logo span { color: #ffc94a; text-shadow: 0 0 34px rgba(255, 201, 74, .5); }
+    #sub { margin-top: -14px; font-size: 15px; opacity: .65; letter-spacing: 1px; }
+    #bar { width: min(440px, 72vw); height: 12px; border-radius: 8px; background: rgba(255, 255, 255, .07);
+      overflow: hidden; border: 1px solid rgba(79, 224, 255, .45); }
+    #fill { height: 100%; width: 0; background: linear-gradient(90deg, #4fe0ff, #a77bff, #ffc94a); transition: width .25s; }
+    #hint { font-size: 13px; opacity: .6; text-align: center; max-width: 520px; padding: 0 16px; }
+    #err { color: #ff7b7b; max-width: 560px; text-align: center; padding: 0 16px; font-size: 14px; }
+    #fs { position: fixed; right: 12px; bottom: 10px; z-index: 5; background: rgba(10, 15, 51, .7); color: #cfe9ff;
+      border: 1px solid rgba(79, 224, 255, .4); border-radius: 8px; padding: 6px 10px; font-size: 12px; cursor: pointer; display: none; }
+    #fs:hover { background: rgba(30, 40, 110, .9); }
+  </style>
+</head>
+<body>
+  <canvas id="unity-canvas" tabindex="-1"></canvas>
+  <div id="loader">
+    <div id="logo">IOTA <span>PARTY</span></div>
+    <div id="sub">Das Partyspiel im Tangle · 2 – 6 Spieler</div>
+    <div id="bar"><div id="fill"></div></div>
+    <div id="hint">Lädt … beim ersten Mal dauert es etwas länger, danach geht es schneller.</div>
+    <div id="err"></div>
+  </div>
+  <button id="fs" title="Vollbild">⛶ Vollbild</button>
+  <script>
+    var canvas = document.querySelector("#unity-canvas");
+    canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      document.querySelector("#hint").textContent = "Hinweis: IOTA Party spielt man am besten am PC oder Laptop mit Tastatur & Maus (oder Gamepad).";
+    }
+    var buildUrl = "Build";
+    var config = {
+      arguments: [],
+      dataUrl: buildUrl + "/iota-party.data.unityweb",
+      frameworkUrl: buildUrl + "/iota-party.framework.js.unityweb",
+      codeUrl: buildUrl + "/iota-party.wasm.unityweb",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "IOTA Community",
+      productName: "IOTA Party",
+      productVersion: "0.1.0",
+      devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.25)
+    };
+    var script = document.createElement("script");
+    script.src = buildUrl + "/iota-party.loader.js";
+    script.onload = function () {
+      createUnityInstance(canvas, config, function (p) {
+        document.querySelector("#fill").style.width = (100 * p) + "%";
+      }).then(function (instance) {
+        window.unityInstance = instance;
+        var loader = document.querySelector("#loader");
+        loader.style.opacity = "0";
+        setTimeout(function () { loader.style.display = "none"; }, 500);
+        var fs = document.querySelector("#fs");
+        fs.style.display = "block";
+        fs.onclick = function () { instance.SetFullscreen(1); };
+        canvas.focus();
+      }).catch(function (message) {
+        document.querySelector("#err").textContent = "Das Spiel konnte nicht geladen werden: " + message +
+          " – bitte einen aktuellen Chrome, Edge oder Firefox verwenden.";
+      });
+    };
+    script.onerror = function () { document.querySelector("#err").textContent = "Spieldateien nicht gefunden."; };
+    document.body.appendChild(script);
+    canvas.addEventListener("mousedown", function () { canvas.focus(); });
+  </script>
+</body>
+</html>
